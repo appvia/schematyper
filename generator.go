@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/appvia/schematyper/schemas"
 	"go/format"
 	"io/ioutil"
 	"log"
@@ -18,6 +17,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/gedex/inflector"
+	"github.com/idubinskiy/schematyper/schemas"
 	"github.com/idubinskiy/schematyper/stringset"
 )
 
