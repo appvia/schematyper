@@ -7,6 +7,7 @@ import (
 	"go/format"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,6 +23,8 @@ import (
 )
 
 //go:generate schematyper --root-type=MetaSchemaDraft7 --prefix=MetaSchemaDraft7 metaschema_draft_7.json -o schemas/metaschema_draft_7.go --package schemas --generator schematyper
+
+const epsilon = 1e-9
 
 var (
 	outToStdout     = kingpin.Flag("console", "output to console instead of file").Default("false").Short('c').Bool()
@@ -140,7 +143,7 @@ var needTimeImport bool
 const (
 	typeString              = "string"
 	typeInteger             = "integer"
-	typeInt                 = "int"
+	typeInt                 = "int64"
 	typeNumber              = "number"
 	typeFloat64             = "float64"
 	typeBoolean             = "boolean"
@@ -165,10 +168,16 @@ var typeStrings = map[string]string{
 	typeArray:   typeArray,
 }
 
-func getTypeString(jsonType, format string) string {
-	if format == "date-time" {
+func getTypeString(jsonType string, schema *schemas.MetaSchemaDraft7) string {
+	if schema.Format == "date-time" {
 		needTimeImport = true
 		return typeTime
+	}
+
+	if jsonType == typeNumber {
+		if math.Abs(1.0-schema.MultipleOf) < epsilon && math.Abs(schema.MultipleOf-1.0) < epsilon {
+			return typeStrings[typeInteger]
+		}
 	}
 
 	if ts, ok := typeStrings[jsonType]; ok {
@@ -443,7 +452,7 @@ func processType(s *schemas.MetaSchemaDraft7, pName, pDesc, path, parentPath str
 	hasProps := len(props) > 0
 	hasAddlProps, addlPropsSchema := parseAdditionalProperties(s.AdditionalProperties)
 
-	ts := getTypeString(jsonType, s.Format)
+	ts := getTypeString(jsonType, s)
 	switch ts {
 	case typeObject:
 		if gt.Name == "Properties" {
@@ -537,10 +546,10 @@ func processType(s *schemas.MetaSchemaDraft7, pName, pDesc, path, parentPath str
 					jsonType = propType[1]
 				}
 
-				sf.TypePrefix = getTypeString(jsonType.(string), propSchema.Format)
+				sf.TypePrefix = getTypeString(jsonType.(string), propSchema)
 			}
 		case string:
-			sf.TypePrefix = getTypeString(propType, propSchema.Format)
+			sf.TypePrefix = getTypeString(propType, propSchema)
 		case nil:
 			sf.TypePrefix = typeEmptyInterface
 		}

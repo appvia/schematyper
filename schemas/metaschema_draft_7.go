@@ -57,7 +57,7 @@ type MetaSchemaDraft7EnumItem interface{}
 
 type MetaSchemaDraft7Example interface{}
 
-type MetaSchemaDraft7NonNegativeInteger int
+type MetaSchemaDraft7NonNegativeInteger int64
 
 type MetaSchemaDraft7NonNegativeIntegerDefault0 interface{}
 
