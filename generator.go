@@ -21,7 +21,7 @@ import (
 	"github.com/idubinskiy/schematyper/stringset"
 )
 
-//go:generate schematyper --root-type=MetaSchema --prefix=Meta metaschema.json -o schemas/metaschema.go --package schemas --generator schematyper
+//go:generate schematyper --root-type=MetaSchemaDraft7 --prefix=MetaSchemaDraft7 metaschema_draft_7.json -o schemas/metaschema_draft_7.go --package schemas --generator schematyper
 
 var (
 	outToStdout     = kingpin.Flag("console", "output to console instead of file").Default("false").Short('c').Bool()
@@ -268,16 +268,16 @@ func generateFieldName(origName string) string {
 	return generateIdentifier(origName, true)
 }
 
-func getTypeSchema(typeInterface interface{}) *schemas.MetaSchema {
+func getTypeSchema(typeInterface interface{}) *schemas.MetaSchemaDraft7 {
 	typeSchemaJSON, _ := json.Marshal(typeInterface)
-	var typeSchema schemas.MetaSchema
+	var typeSchema schemas.MetaSchemaDraft7
 	json.Unmarshal(typeSchemaJSON, &typeSchema)
 	return &typeSchema
 }
 
-func getTypeSchemas(typeInterface interface{}) map[string]*schemas.MetaSchema {
+func getTypeSchemas(typeInterface interface{}) map[string]*schemas.MetaSchemaDraft7 {
 	typeSchemasJSON, _ := json.Marshal(typeInterface)
-	var typeSchemas map[string]*schemas.MetaSchema
+	var typeSchemas map[string]*schemas.MetaSchemaDraft7
 	json.Unmarshal(typeSchemasJSON, &typeSchemas)
 	return typeSchemas
 }
@@ -290,7 +290,7 @@ func singularize(plural string) string {
 	return singular
 }
 
-func parseAdditionalProperties(ap interface{}) (hasAddl bool, addlSchema *schemas.MetaSchema) {
+func parseAdditionalProperties(ap interface{}) (hasAddl bool, addlSchema *schemas.MetaSchemaDraft7) {
 	switch ap := ap.(type) {
 	case bool:
 		return ap, nil
@@ -302,7 +302,7 @@ func parseAdditionalProperties(ap interface{}) (hasAddl bool, addlSchema *schema
 }
 
 type deferredType struct {
-	schema     *schemas.MetaSchema
+	schema     *schemas.MetaSchemaDraft7
 	name       string
 	desc       string
 	parentPath string
@@ -345,7 +345,7 @@ var deferredTypes = make(map[string]deferredType)
 var typesByName = make(stringSetMap)
 var transitiveRefs = make(map[string]string)
 
-func processType(s *schemas.MetaSchema, pName, pDesc, path, parentPath string) (typeRef string) {
+func processType(s *schemas.MetaSchemaDraft7, pName, pDesc, path, parentPath string) (typeRef string) {
 	if len(s.Definitions) > 0 {
 		parseDefs(s, path)
 	}
@@ -700,7 +700,7 @@ func dedupeTypes() {
 	}
 }
 
-func parseDefs(s *schemas.MetaSchema, path string) {
+func parseDefs(s *schemas.MetaSchemaDraft7, path string) {
 	defs := getTypeSchemas(s.Definitions)
 	for defName, defSchema := range defs {
 		name := processType(defSchema, defName, defSchema.Description, path+"/definitions/"+defName, path)
@@ -718,7 +718,7 @@ func main() {
 		log.Fatalln("Error reading file:", err)
 	}
 
-	var s schemas.MetaSchema
+	var s schemas.MetaSchemaDraft7
 	if err = json.Unmarshal(file, &s); err != nil {
 		log.Fatalln("Error parsing JSON:", err)
 	}
