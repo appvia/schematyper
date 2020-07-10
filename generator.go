@@ -42,6 +42,7 @@ type structField struct {
 	Required     bool
 	Embedded     bool
 	PtrForOmit   bool
+	Description  string
 }
 
 type structFields []structField
@@ -110,6 +111,9 @@ func (gt goType) print(buf *bytes.Buffer) {
 				tagString += ",omitempty"
 			}
 			tagString += "\"`"
+		}
+		if sf.Description != "" {
+			buf.WriteString(fmt.Sprintf("// %s %s\n", sf.Name, strings.ReplaceAll(sf.Description, "\n", "\n// ")))
 		}
 		buf.WriteString(fmt.Sprintf("%s %s %s\n", sf.Name, sfTypeStr, tagString))
 	}
@@ -506,6 +510,8 @@ func processType(s *metaSchema, pName, pDesc, path, parentPath string) (typeRef 
 		if sf.Name = generateFieldName(fieldName); sf.Name == "" {
 			log.Fatalln("Can't generate field without name.")
 		}
+
+		sf.Description = propSchema.Description
 
 		if propSchema.Ref != "" {
 			if refType, ok := types[propSchema.Ref]; ok {
