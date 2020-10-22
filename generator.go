@@ -267,7 +267,11 @@ func generateIdentifier(origName string, exported bool) string {
 
 func generateTypeName(origName string) string {
 	if *packageName != "main" || *typeNamesPrefix != "" {
-		return *typeNamesPrefix + generateIdentifier(origName, true)
+		res := generateIdentifier(origName, true)
+		if !strings.HasPrefix(res, *typeNamesPrefix) {
+			res = *typeNamesPrefix + res
+		}
+		return res
 	}
 
 	return generateIdentifier(origName, false)
